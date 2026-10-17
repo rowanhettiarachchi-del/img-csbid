@@ -1,0 +1,894 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IMG to Scratch3 CSB IDs (HSV)</title>
+
+<style>
+:root {
+  --blue: #3978ed;
+  --blue-dark: #245ac4;
+  --blue-light: #eaf1ff;
+  --bg: #f3f6fb;
+  --white: #fff;
+  --gray: #e5eaf2;
+  --text: #24334b;
+  --muted: #75839a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 28px 16px 50px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+}
+
+header {
+  max-width: 1120px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 19px;
+  display: grid;
+  place-items: center;
+  background: var(--blue);
+  color: white;
+  font-size: 25px;
+  box-shadow: 0 7px 18px #3978ed35;
+}
+
+h1 {
+  margin: 0;
+  font-size: 27px;
+  letter-spacing: -1px;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+main {
+  max-width: 1120px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.card {
+  min-width: 0;
+  padding: 22px;
+  background: var(--white);
+  border: 1px solid #e7ecf4;
+  border-radius: 26px;
+  box-shadow: 0 8px 30px #24334b08;
+}
+
+.card h2 {
+  font-size: 18px;
+  margin: 0 0 6px;
+}
+
+.description {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.upload {
+  display: block;
+  margin: 18px 0;
+  padding: 18px;
+  text-align: center;
+  background: #f7f9fd;
+  border: 2px dashed #cbd7e9;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.upload:hover {
+  border-color: var(--blue);
+  background: var(--blue-light);
+}
+
+.upload strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.upload span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+input[type=file] { display: none; }
+
+.stage {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background:
+    linear-gradient(45deg,#e8edf5 25%,transparent 25%),
+    linear-gradient(-45deg,#e8edf5 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#e8edf5 75%),
+    linear-gradient(-45deg,transparent 75%,#e8edf5 75%);
+  background-size: 20px 20px;
+  background-position: 0 0,0 10px,10px -10px,-10px 0;
+  border-radius: 19px;
+  touch-action: none;
+  cursor: grab;
+}
+
+.stage:active { cursor: grabbing; }
+
+#cropCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  pointer-events: none;
+  padding: 20px;
+}
+
+.control { margin-top: 18px; }
+
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+output, .badge {
+  color: var(--blue-dark);
+  background: var(--blue-light);
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+input[type=range] {
+  width: 100%;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+
+.row {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+button {
+  border: 1px solid var(--gray);
+  border-radius: 14px;
+  padding: 11px 14px;
+  background: white;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: .18s;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #a9c2f8;
+  background: #f3f7ff;
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--blue);
+  color: white;
+  border-color: var(--blue);
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--blue-dark);
+}
+
+.status {
+  min-height: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+.full { grid-column: 1 / -1; }
+
+.output-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.output-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.list-grid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.list-box {
+  padding: 15px;
+  border: 1px solid var(--gray);
+  border-radius: 19px;
+  min-width: 0;
+}
+
+.list-box h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.list-box p {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.data {
+  width: 100%;
+  height: 105px;
+  margin-top: 12px;
+  padding: 12px;
+  resize: vertical;
+  border: 1px solid var(--gray);
+  border-radius: 15px;
+  background: #f8faff;
+  color: #30435f;
+  font: 11px/1.8 ui-monospace, SFMono-Regular, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.list-box button {
+  margin-top: 8px;
+  width: 100%;
+}
+
+footer {
+  max-width: 1120px;
+  margin: 20px auto 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+@media (max-width: 760px) {
+  main { grid-template-columns: 1fr; }
+  .full { grid-column: auto; }
+  .list-grid { grid-template-columns: 1fr; }
+  .card { padding: 17px; border-radius: 22px; }
+  h1 { font-size: 23px; }
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="logo">🖼️</div>
+  <div>
+    <h1>IMG to Scratch3 CSB IDs (HSV)</h1>
+    <div class="subtitle">Made by Scratcher Rowan15329</div>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Image cropper</h2>
+    <div class="description">
+      Upload an image and move it inside the 480 × 360 crop frame.
+    </div>
+
+    <label class="upload" for="file">
+      <strong>＋ Choose an image</strong>
+      <span>PNG, JPG, WebP, and other supported formats</span>
+    </label>
+    <input id="file" type="file" accept="image/*">
+
+    <div class="stage" id="stage">
+      <canvas id="cropCanvas" width="480" height="360"></canvas>
+      <div class="empty" id="empty">
+        Your 480 × 360 crop appears here.
+      </div>
+    </div>
+
+    <div class="control">
+      <div class="label-row">
+        <label for="zoom">Zoom</label>
+        <output id="zoomValue">100%</output>
+      </div>
+      <input id="zoom" type="range" min="25" max="400" value="100">
+    </div>
+
+    <div class="row">
+      <button id="fit">Fit entire image</button>
+      <button id="fill">Fill frame</button>
+      <button id="center">Center</button>
+    </div>
+
+    <div class="row">
+      <button class="primary" id="downloadCrop" disabled>
+        Download crop PNG
+      </button>
+    </div>
+
+    <div class="status" id="cropStatus">
+      Upload an image to begin.
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>How it works:</h2>
+    <div class="description">
+      Color ID is the pixel's hue angle. BRI and SAT are calculated
+      independently for every pixel.
+    </div>
+
+    <div class="control">
+      <div class="label-row">
+        <span>Color ID</span>
+        <span class="badge">001–360</span>
+      </div>
+      <div class="description">
+        Hue angle in degrees, converted to a whole number from 001 to 360.
+        Grayscale pixels are assigned 001 because they have no defined hue.
+      </div>
+    </div>
+
+    <div class="control">
+      <div class="label-row">
+        <span>Pixel count</span>
+        <span class="badge">172,800</span>
+      </div>
+      <div class="description">
+        480 × 360 pixels, read from left to right and top to bottom.
+      </div>
+    </div>
+
+    <div class="control">
+      <div class="label-row">
+        <span>Number format</span>
+        <span class="badge">3 digits</span>
+      </div>
+      <div class="description">
+        Color ID uses 001–360. BRI and SAT use 000–100.
+        All values are separated by hyphens.
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="primary" id="generate" disabled>
+        Generate all lists
+      </button>
+      <button id="downloadTxt" disabled>Download TXT</button>
+    </div>
+
+    <div class="status" id="generationStatus">
+      Upload an image to enable generation.
+    </div>
+
+    <div class="description">
+      The interface theme does not change the image or its pixel values.
+    </div>
+  </section>
+
+  <section class="card full">
+    <div class="output-top">
+      <div>
+        <h2>Pixel data</h2>
+        <div class="description">
+          Each list contains 172,800 values in image reading order.
+        </div>
+      </div>
+      <div class="output-actions">
+        <button id="copyAll" disabled>Copy all lists</button>
+      </div>
+    </div>
+
+    <div class="list-grid">
+      <div class="list-box">
+        <h3>Color ID</h3>
+        <p>Hue angle · 001–360</p>
+        <textarea class="data" id="colorData" readonly
+          placeholder="Generate lists to see values…"></textarea>
+        <button id="copyColor" disabled>Copy Color ID</button>
+      </div>
+
+      <div class="list-box">
+        <h3>BRI</h3>
+        <p>HSV brightness · 000–100</p>
+        <textarea class="data" id="briData" readonly
+          placeholder="Generate lists to see values…"></textarea>
+        <button id="copyBri" disabled>Copy BRI</button>
+      </div>
+
+      <div class="list-box">
+        <h3>SAT</h3>
+        <p>HSV saturation · 000–100</p>
+        <textarea class="data" id="satData" readonly
+          placeholder="Generate lists to see values…"></textarea>
+        <button id="copySat" disabled>Copy SAT</button>
+      </div>
+    </div>
+
+    <div class="status" id="copyStatus"></div>
+  </section>
+</main>
+
+<footer>
+  Pixel Curve · 480 × 360 · Runs locally in your browser
+</footer>
+
+<script>
+const WIDTH = 480;
+const HEIGHT = 360;
+const TOTAL = WIDTH * HEIGHT;
+
+const fileInput = document.getElementById("file");
+const stage = document.getElementById("stage");
+const cropCanvas = document.getElementById("cropCanvas");
+const cropCtx = cropCanvas.getContext("2d", {
+  willReadFrequently: true
+});
+const empty = document.getElementById("empty");
+const zoomInput = document.getElementById("zoom");
+const zoomValue = document.getElementById("zoomValue");
+const cropStatus = document.getElementById("cropStatus");
+const generationStatus = document.getElementById("generationStatus");
+const copyStatus = document.getElementById("copyStatus");
+
+const colorData = document.getElementById("colorData");
+const briData = document.getElementById("briData");
+const satData = document.getElementById("satData");
+
+let image = null;
+let imageURL = null;
+let scale = 1;
+let baseScale = 1;
+let offsetX = 0;
+let offsetY = 0;
+let dragging = false;
+let lastPointerX = 0;
+let lastPointerY = 0;
+let generated = false;
+
+function setButtonsEnabled(enabled) {
+  document.getElementById("generate").disabled = !enabled;
+  document.getElementById("downloadCrop").disabled = !enabled;
+}
+
+function clearLists() {
+  generated = false;
+
+  colorData.value = "";
+  briData.value = "";
+  satData.value = "";
+
+  document.getElementById("copyColor").disabled = true;
+  document.getElementById("copyBri").disabled = true;
+  document.getElementById("copySat").disabled = true;
+  document.getElementById("copyAll").disabled = true;
+  document.getElementById("downloadTxt").disabled = true;
+}
+
+function drawCrop() {
+  cropCtx.clearRect(0, 0, WIDTH, HEIGHT);
+  cropCtx.fillStyle = "#ffffff";
+  cropCtx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  if (!image) {
+    empty.style.display = "grid";
+    zoomValue.value = "100%";
+    return;
+  }
+
+  empty.style.display = "none";
+
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
+
+  cropCtx.drawImage(
+    image,
+    offsetX,
+    offsetY,
+    drawWidth,
+    drawHeight
+  );
+
+  const zoomPercent = Math.round(scale / baseScale * 100);
+  zoomValue.value = zoomPercent + "%";
+  cropStatus.textContent =
+    "Crop: 480 × 360 pixels · Zoom: " + zoomPercent + "%";
+}
+
+function setScale(newScale, anchorX = WIDTH / 2, anchorY = HEIGHT / 2) {
+  if (!image) return;
+
+  newScale = Math.max(
+    baseScale * 0.25,
+    Math.min(baseScale * 4, newScale)
+  );
+
+  const factor = newScale / scale;
+
+  offsetX = anchorX - (anchorX - offsetX) * factor;
+  offsetY = anchorY - (anchorY - offsetY) * factor;
+  scale = newScale;
+
+  zoomInput.value = Math.round(scale / baseScale * 100);
+
+  clearLists();
+  drawCrop();
+}
+
+function fitImage() {
+  if (!image) return;
+
+  baseScale = Math.min(
+    WIDTH / image.naturalWidth,
+    HEIGHT / image.naturalHeight
+  );
+
+  scale = baseScale;
+  offsetX = (WIDTH - image.naturalWidth * scale) / 2;
+  offsetY = (HEIGHT - image.naturalHeight * scale) / 2;
+
+  zoomInput.value = 100;
+  clearLists();
+  drawCrop();
+}
+
+function fillFrame() {
+  if (!image) return;
+
+  baseScale = Math.max(
+    WIDTH / image.naturalWidth,
+    HEIGHT / image.naturalHeight
+  );
+
+  scale = baseScale;
+  offsetX = (WIDTH - image.naturalWidth * scale) / 2;
+  offsetY = (HEIGHT - image.naturalHeight * scale) / 2;
+
+  zoomInput.value = 100;
+  clearLists();
+  drawCrop();
+}
+
+function centerImage() {
+  if (!image) return;
+
+  offsetX = (WIDTH - image.naturalWidth * scale) / 2;
+  offsetY = (HEIGHT - image.naturalHeight * scale) / 2;
+
+  clearLists();
+  drawCrop();
+}
+
+fileInput.addEventListener("change", event => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    cropStatus.textContent = "Please choose a valid image file.";
+    return;
+  }
+
+  if (imageURL) URL.revokeObjectURL(imageURL);
+
+  imageURL = URL.createObjectURL(file);
+  const nextImage = new Image();
+
+  nextImage.onload = () => {
+    image = nextImage;
+    fitImage();
+    setButtonsEnabled(true);
+
+    generationStatus.textContent =
+      "Image loaded. Generate the three pixel lists when ready.";
+  };
+
+  nextImage.onerror = () => {
+    cropStatus.textContent = "The image could not be opened.";
+  };
+
+  nextImage.src = imageURL;
+});
+
+zoomInput.addEventListener("input", () => {
+  if (!image) return;
+
+  const desired = baseScale * Number(zoomInput.value) / 100;
+  setScale(desired);
+});
+
+document.getElementById("fit").addEventListener("click", fitImage);
+document.getElementById("fill").addEventListener("click", fillFrame);
+document.getElementById("center").addEventListener("click", centerImage);
+
+stage.addEventListener("pointerdown", event => {
+  if (!image) return;
+
+  dragging = true;
+  lastPointerX = event.clientX;
+  lastPointerY = event.clientY;
+
+  stage.setPointerCapture(event.pointerId);
+});
+
+stage.addEventListener("pointermove", event => {
+  if (!dragging || !image) return;
+
+  const rect = stage.getBoundingClientRect();
+
+  const dx =
+    (event.clientX - lastPointerX) * WIDTH / rect.width;
+  const dy =
+    (event.clientY - lastPointerY) * HEIGHT / rect.height;
+
+  offsetX += dx;
+  offsetY += dy;
+
+  lastPointerX = event.clientX;
+  lastPointerY = event.clientY;
+
+  clearLists();
+  drawCrop();
+});
+
+stage.addEventListener("pointerup", () => {
+  dragging = false;
+});
+
+stage.addEventListener("pointercancel", () => {
+  dragging = false;
+});
+
+stage.addEventListener("wheel", event => {
+  if (!image) return;
+
+  event.preventDefault();
+
+  const rect = stage.getBoundingClientRect();
+
+  const anchorX =
+    (event.clientX - rect.left) * WIDTH / rect.width;
+  const anchorY =
+    (event.clientY - rect.top) * HEIGHT / rect.height;
+
+  const factor = event.deltaY < 0 ? 1.08 : 1 / 1.08;
+
+  setScale(scale * factor, anchorX, anchorY);
+}, { passive: false });
+
+document.getElementById("downloadCrop").addEventListener("click", () => {
+  if (!image) return;
+
+  const link = document.createElement("a");
+  link.download = "pixel-curve-crop-480x360.png";
+  link.href = cropCanvas.toDataURL("image/png");
+  link.click();
+});
+
+function pad3(value) {
+  return String(value).padStart(3, "0");
+}
+
+/*
+  Color ID:
+  Hue is converted into 001–360.
+  Grayscale pixels have undefined hue and are assigned 001.
+*/
+function getColorId(r, g, b) {
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+
+  const maximum = Math.max(rn, gn, bn);
+  const minimum = Math.min(rn, gn, bn);
+  const delta = maximum - minimum;
+
+  if (delta === 0) return 1;
+
+  let hue;
+
+  if (maximum === rn) {
+    hue = 60 * (((gn - bn) / delta) % 6);
+  } else if (maximum === gn) {
+    hue = 60 * ((bn - rn) / delta + 2);
+  } else {
+    hue = 60 * ((rn - gn) / delta + 4);
+  }
+
+  hue = (hue + 360) % 360;
+
+  return Math.floor(hue) + 1;
+}
+
+/* BRI is HSV value, scaled to 000–100. */
+function getBrightness(r, g, b) {
+  return Math.round(Math.max(r, g, b) / 255 * 100);
+}
+
+/* SAT is HSV saturation, scaled to 000–100. */
+function getSaturation(r, g, b) {
+  const maximum = Math.max(r, g, b);
+  const minimum = Math.min(r, g, b);
+
+  if (maximum === 0) return 0;
+
+  return Math.round((maximum - minimum) / maximum * 100);
+}
+
+document.getElementById("generate").addEventListener("click", () => {
+  if (!image) return;
+
+  const started = performance.now();
+
+  generationStatus.textContent = "Reading 172,800 pixels…";
+  copyStatus.textContent = "";
+  clearLists();
+
+  const pixels = cropCtx.getImageData(
+    0, 0, WIDTH, HEIGHT
+  ).data;
+
+  const colors = new Array(TOTAL);
+  const brightness = new Array(TOTAL);
+  const saturation = new Array(TOTAL);
+
+  for (let i = 0, p = 0; i < TOTAL; i++, p += 4) {
+    const r = pixels[p];
+    const g = pixels[p + 1];
+    const b = pixels[p + 2];
+
+    colors[i] = pad3(getColorId(r, g, b));
+    brightness[i] = pad3(getBrightness(r, g, b));
+    saturation[i] = pad3(getSaturation(r, g, b));
+  }
+
+  colorData.value = colors.join("-");
+  briData.value = brightness.join("-");
+  satData.value = saturation.join("-");
+
+  generated = true;
+
+  document.getElementById("copyColor").disabled = false;
+  document.getElementById("copyBri").disabled = false;
+  document.getElementById("copySat").disabled = false;
+  document.getElementById("copyAll").disabled = false;
+  document.getElementById("downloadTxt").disabled = false;
+
+  const seconds = (
+    (performance.now() - started) / 1000
+  ).toFixed(2);
+
+  generationStatus.textContent =
+    "Complete! 172,800 values per list · Generated in " +
+    seconds + " seconds.";
+});
+
+async function copyText(text, label) {
+  try {
+    await navigator.clipboard.writeText(text);
+    copyStatus.textContent = label + " copied to clipboard.";
+  } catch (error) {
+    const textarea = document.createElement("textarea");
+
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+      const success = document.execCommand("copy");
+
+      copyStatus.textContent = success
+        ? label + " copied to clipboard."
+        : "Copy failed. Select the text and copy it manually.";
+    } catch (copyError) {
+      copyStatus.textContent =
+        "Copy failed. Select the text and copy it manually.";
+    }
+
+    textarea.remove();
+  }
+}
+
+document.getElementById("copyColor").addEventListener("click", () => {
+  if (generated) copyText(colorData.value, "Color ID");
+});
+
+document.getElementById("copyBri").addEventListener("click", () => {
+  if (generated) copyText(briData.value, "BRI");
+});
+
+document.getElementById("copySat").addEventListener("click", () => {
+  if (generated) copyText(satData.value, "SAT");
+});
+
+document.getElementById("copyAll").addEventListener("click", () => {
+  if (!generated) return;
+
+  const all =
+    "Color ID\n" + colorData.value +
+    "\n\nBRI\n" + briData.value +
+    "\n\nSAT\n" + satData.value;
+
+  copyText(all, "All three lists");
+});
+
+document.getElementById("downloadTxt").addEventListener("click", () => {
+  if (!generated) return;
+
+  const content =
+    "Color ID\n" + colorData.value +
+    "\n\nBRI\n" + briData.value +
+    "\n\nSAT\n" + satData.value;
+
+  const blob = new Blob(
+    [content],
+    { type: "text/plain;charset=utf-8" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "pixel-curve-data.txt";
+  link.click();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+drawCrop();
+</script>
+</body>
+</html>
